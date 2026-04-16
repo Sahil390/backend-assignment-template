@@ -1,4 +1,4 @@
-﻿# Waygood Study Abroad Candidate Evaluation Starter
+# Waygood Study Abroad Candidate Evaluation Starter
 
 This repository is a starter assignment for backend-focused MERN candidates interviewing with Waygood.
 
@@ -176,3 +176,30 @@ Along with this README, a Word assignment brief is available at:
 
 - Waygood website: student discovery, AI tools, calculators, and partner-university positioning
 - Job description: backend APIs, MongoDB aggregation, performance optimization, caching, and AI integration
+
+---
+## Candidate Submission Notes
+
+### 1. Setup Instructions
+I have containerized the entire stack for easy reviewer evaluation. To spin up the database, backend, and frontend concurrently without manual config:
+```bash
+docker compose up -d --build
+```
+This will automatically map port `4000` to the Node backend, `5173` to Vite, and `27017` to MongoDB. 
+
+> **Alternative Local Setup**: Ensure MongoDB is running on port `27017` and run `npm run dev` in both frontend and backend directories.
+
+_Testing:_ I've implemented a mocked Mongoose test suite using `jest` and `supertest`. To run the API critical flow tests:
+```bash
+cd backend
+npm run test
+```
+
+### 2. Architecture & Implementation Decisions
+- **Authentication**: Using JSON Web Tokens (JWT) for stateless sessions and `bcryptjs` hashing securely applied via a Mongoose pre-save hook.
+- **Recommendation Engine**: Fully transitioned from the `O(N)` Javascript loop to a native **MongoDB Aggregation Pipeline**. This handles `matchScore` conditional summation (`$cond` and `$regexMatch`) directly within the database and sorts prior to returning.
+- **Application Workflow**: Built out state transitions via a predefined mapping (`validStatusTransitions`). This strict mapping effectively guards against irregular data flows (e.g., jump from "draft" directly to "enrolled").
+
+### 3. Performance & Optimizations
+- Implemented robust MongoDB Compound Indexes in Mongoose schemas specifically for fields heavily hit during advanced discovery modes (like `{ country: 1, degreeLevel: 1, field: 1, tuitionFeeUsd: 1 }`).
+- Leveraged the in-memory `MemoryCacheService` cache for endpoints that don't need real-time data accuracy, like `listPopularUniversities`.
